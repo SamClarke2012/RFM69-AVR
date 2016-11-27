@@ -240,7 +240,7 @@ void RFM69HW_setMode( Mode mode ) {
          OPMODE_MODE_TX( opModeRegister ); 
          break;
       case RFM69HW_MODE_RX:
-         OPMODE_MODE_SLEEP( opModeRegister ); 
+         OPMODE_MODE_RX( opModeRegister ); 
          break;
       case RFM69HW_MODE_LISTEN:
          // TODO - set stand by, set options, set listen bit
