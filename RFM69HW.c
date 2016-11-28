@@ -34,11 +34,11 @@ static void _raiseFatalError( void ) {
 }
 
 /*
-
+   Basic init function for now...
 */
 void RFM69HW_init( uint16_t cFreqMhz,  uint32_t bitRateKbps,
                    uint8_t  networkId, uint8_t  nodeId,
-                   void (* error_function)( Bool )  ) {
+                   Mode mode,          void (* error_function)( Bool )  ) {
 
    // Set CS pin to output
    DDRB |= RF_CHIPSEL_PIN;
@@ -50,8 +50,8 @@ void RFM69HW_init( uint16_t cFreqMhz,  uint32_t bitRateKbps,
    RFM69HW_setBitRate( bitRateKbps );
    // Set network ID
    // set node ID
-   // Set mode to stand-by.
-   RFM69HW_setMode( RFM69HW_MODE_STANDBY );
+   // Set mode 
+   RFM69HW_setMode( mode );
    // Setup ISR / modulator settings
    return;
 }
@@ -146,23 +146,22 @@ Bool RFM69HW_getAFClowBeta( void ) {
 }
 
 void RFM69HW_setListenCoefIdle( uint8_t idleCoef ) {
-   // TODO
+   RFM69HW_writeReg( REGLISTEN2, idleCoef);
    return;
 }
 
 uint8_t RFM69HW_getListenCoefIdle( void ) {
-   // TODO
-   return 0;
+   return RFM69HW_readReg( REGLISTEN2 );
 }
 
 // Get/Set Listen Coeficients - idleTime = ListenCoefIdle*ListenResolIdle
 void RFM69HW_setListenCoefRx( uint8_t rxCoef ) {
-   // TODO
+   RFM69HW_writeReg( REGLISTEN3, rxCoef );
    return;
 }
 
 uint8_t RFM69HW_getListenCoefRx( void ) {
-   // TODO
+   return RFM69HW_readReg( REGLISTEN3 );
 };
 
 // Get/Set OOK fixed threshold value in dBm, max 15. - only for fixed mode 
@@ -243,8 +242,29 @@ void RFM69HW_setMode( Mode mode ) {
          OPMODE_MODE_RX( opModeRegister ); 
          break;
       case RFM69HW_MODE_LISTEN:
+         // Sniffer mode - sniff any activity over RSSI thresh
+         // Set to stand-by
+         RFM69HW_setMode( RFM69HW_MODE_STANDBY );
+         uint8_t listenCriteria = 0;
+         // Trigger on RSSI thresh only
+         LISTEN1_CRITERIA_RSSIONLY( listenCriteria );
+         // End by going into standby (set mode here if another is desired)
+         LISTEN1_END_MODE( listenCriteria );
+         // Set the listen bit
+         OPMODE_LISTEN_ON( opModeRegister );
+         // Write the listen parameters
+         RFM69HW_writeReg( REGLISTEN1, listenCriteria );
+         // Write back to op-mode register
+         RFM69HW_writeReg( REGOPMODE, opModeRegister );
+         _err( ON ); // Toggle error LED on
+         // Trigger when a byte is written to fifo
+         while( ! RFM69HW_getIRQ( RFM69HW_IRQFLAG_FIFONOTEMPTY) );
+         _err( OFF ); // We survived, turn it off.
+         // Listen abort
+         // clear ListenOn bit - REGOPMODE
+         // Set to standby
          // TODO - set stand by, set options, set listen bit
-         break;
+         return;
       default:
          break;
    }
@@ -256,6 +276,7 @@ void RFM69HW_setMode( Mode mode ) {
    _err( OFF ); // We survived, turn it off.
    return;
 }
+
 
 /*
    Returns the current mode of the chipset.
@@ -284,7 +305,7 @@ uint8_t RFM69HW_getRSSI( void ) {
    uint8_t RSSIconfig = 0;// RFM69HW_readReg( REGRSSICONFIG );
    // Toggle the start bit
    RSSI_START( RSSIconfig );
-   // Write it back to the register
+   // Write it to the register
    RFM69HW_writeReg( REGRSSICONFIG, RSSIconfig );
    // Wait for sampling to complete
    _err( ON ); // Toggle error LED to on.
@@ -299,6 +320,11 @@ void RFM69HW_setRSSIthresh( uint8_t threshDbm ) {
    return;
 }
 
+uint8_t   RFM69HW_getRSSIthresh( void ) {
+   // TODO
+   return 0;
+}
+
 // Settings for timeout IRQ
 void RFM69HW_setRxTimeout( uint8_t timeout ) {
    // TODO
@@ -310,15 +336,136 @@ void RFM69HW_setRSSItimeout( uint8_t timeout ) {
    return;
 }
 
+void RFM69HW_setPreambleSize( uint16_t size ) {
+   return;
+}
+
+uint16_t RFM69HW_getPreambleSize( void ) {
+   return 0;
+}
+
+void RFM69HW_setFifoFillCondition( Bool condition ) {
+   return;
+}
+
+Bool RFM69HW_getFifoFillCondition( void ) {
+   return 0;
+}
+
+void RFM69HW_setSync( Bool state ) {
+   return;
+}
+
+Bool RFM69HW_getSync( void ) {
+   return 0;
+}
+
+void RFM69HW_setSyncSize( uint8_t syncWordSize ) {
+   return;
+} // max 7 - 0 based
+
+uint8_t RFM69HW_getSyncSize( void ) {
+   return 0;
+} // max 7 - 0 based
+
+void RFM69HW_setSyncTolerance( uint8_t tolerance ) {
+   return;
+} // max 7
+
+uint8_t RFM69HW_getSyncTolerance( void ) {
+   return 0; // max 7
+}
+
+void RFM69HW_setSyncWord( char *word ) {
+   return;
+}
+
+char *RFM69HW_getSyncWord( void ) {
+   char *a = calloc(1, sizeof(char));
+   return a;
+}
+// Set / Get packet configurations
+// #define   RFM69HW_PKTFMT_FIXED    0
+// #define   RFM69HW_PKTFMT_VARIABLE 1
+void RFM69HW_setPacketFormat( Mode format ) {
+   return;
+}
+
+Mode RFM69HW_getPacketFormat( void ) {
+   return 0;
+}
+
+// #define   RFM69HW_ENCODING_NONE       0
+// #define   RFM69HW_ENCODING_MANCHESTER 1
+// #define   RFM69HW_ENCODING_WHITENING  2
+void RFM69HW_setEncoding( Mode encoding ) {
+   return;
+}
+
+Mode RFM69HW_getEncoding( void ) {
+   return 0;
+}
+
+void RFM69HW_setCRCchecking( Bool state ) {
+   return;
+}
+
+Bool RFM69HW_getCRCchecking( void ) {
+   return 0;
+}
+
+void RFM69HW_setCRCautoClear( Bool state ) {
+   return;
+}
+
+Bool RFM69HW_getCRCautoClear( void ) {
+   return 0;
+}
+
+// #define   RFM69HW_ADDRESSFILTER_OFF       0 // No filtering
+// #define   RFM69HW_ADDRESSFILTER_NODE      1 // Node address only
+// #define   RFM69HW_ADDRESSFILTER_BROADCAST 2 // Node and broadcast adresses
+
+void RFM69HW_setAdressFilter( Mode addrFilter ) {
+   return;
+}
+
+Mode RFM69HW_getAddressFilter( void ) {
+   return 0;
+}
+
+void RFM69HW_setPayloadLength( uint8_t length ) {
+   return; // If fixed packet it's len, if variable it's max Rx
+}
+
+uint8_t RFM69HW_getPayloadLength( void ) {
+   return 0;
+}
+
+void RFM69HW_setNodeAddress( uint8_t address ) {
+   return;
+}
+
+uint8_t RFM69HW_getNodeAddress( void ) {
+   return 0;
+}
+
+void RFM69HW_setBroadcastAddress( uint8_t address ) {
+   return;
+}
+
+uint8_t RFM69HW_getBroadcastAddress( void ) {
+   return 0;
+}
+
 uint8_t RFM69HW_test( void ) {
    return RFM69HW_readReg( REGVERSION );
 }
 
 
-
-
-
-
+/*
+   Static Local Utilities
+*/
 static uint8_t CipherKeyRegs[16] = { REGAESKEY1, REGAESKEY2, REGAESKEY3, REGAESKEY4,
                                      REGAESKEY5, REGAESKEY6, REGAESKEY7, REGAESKEY8,
                                      REGAESKEY9, REGAESKEY10,REGAESKEY11,REGAESKEY12,
@@ -337,7 +484,6 @@ static uint32_t freqConversion( uint16_t freqMhz ) {
 static uint16_t bitRateConversion( float bitRateKbps ) {
    return round((float)( FXOSC/(bitRateKbps*KBPS_BPS) ) );
 }
-
 
 static void RFM69HW_writeReg( uint8_t reg, uint8_t value ) {
    RF_CHIPSEL_LOW;

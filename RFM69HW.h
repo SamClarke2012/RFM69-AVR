@@ -59,8 +59,8 @@
    #define FSTEP    (61.03515625)
 
    void RFM69HW_init( uint16_t cFreqMhz,  uint32_t bitRateKbps,
-                   uint8_t  networkId,    uint8_t  nodeId,
-                   void (* error_function)( Bool )  ); 
+                      uint8_t  networkId, uint8_t  nodeId,
+                      Mode mode,          void (* error_function)( Bool )  ); 
    // Get/Set Carrier Frequency in MHz - e.g. 433Mhz
    void      RFM69HW_setCarrierFrequency( uint16_t freqMhz );
    float     RFM69HW_getCarrierFrequency( void );
@@ -93,9 +93,65 @@
    // Measure and return RSSI
    uint8_t   RFM69HW_getRSSI( void );
    void      RFM69HW_setRSSIthresh( uint8_t threshDbm );
+   uint8_t   RFM69HW_getRSSIthresh( void );
    // Settings for timeout IRQ
    void      RFM69HW_setRxTimeout( uint8_t timeout );
+   uint8_t   RFM69HW_getRxTimeout( void );
    void      RFM69HW_setRSSItimeout( uint8_t timeout );
+   uint8_t   RFM69HW_getRSSItimeout( void );
+   // Settings for preamble size
+   void      RFM69HW_setPreambleSize( uint16_t size );
+   uint16_t  RFM69HW_getPreambleSize( void );
+   // Get / Set the fifo fill condition
+   void      RFM69HW_setFifoFillCondition( Bool condition );
+   Bool      RFM69HW_getFifoFillCondition( void );
+   // Set / Get the sync config
+   void      RFM69HW_setSync( Bool state );
+   Bool      RFM69HW_getSync( void );
+   void      RFM69HW_setSyncSize( uint8_t syncWordSize ); // max 7 - 0 based
+   uint8_t   RFM69HW_getSyncSize( void ); // max 7 - 0 based
+   void      RFM69HW_setSyncTolerance( uint8_t tolerance ); // max 7
+   uint8_t   RFM69HW_getSyncTolerance( void ); // max 7
+   void      RFM69HW_setSyncWord( char *word );
+   char     *RFM69HW_getSyncWord( void );
+   // Set / Get packet configurations
+   #define   RFM69HW_PKTFMT_FIXED    0
+   #define   RFM69HW_PKTFMT_VARIABLE 1
+   void      RFM69HW_setPacketFormat( Mode format );
+   Mode      RFM69HW_getPacketFormat( void );
+
+   #define   RFM69HW_ENCODING_NONE       0
+   #define   RFM69HW_ENCODING_MANCHESTER 1
+   #define   RFM69HW_ENCODING_WHITENING  2
+
+   void      RFM69HW_setEncoding( Mode encoding );
+   Mode      RFM69HW_getEncoding( void );
+
+   void      RFM69HW_setCRCchecking( Bool state );
+   Bool      RFM69HW_getCRCchecking( void );
+
+   void      RFM69HW_setCRCautoClear( Bool state );
+   Bool      RFM69HW_getCRCautoClear( void );
+
+   #define   RFM69HW_ADDRESSFILTER_OFF       0 // No filtering
+   #define   RFM69HW_ADDRESSFILTER_NODE      1 // Node address only
+   #define   RFM69HW_ADDRESSFILTER_BROADCAST 2 // Node and broadcast adresses
+
+   void      RFM69HW_setAdressFilter( Mode addrFilter );
+   Mode      RFM69HW_getAddressFilter( void );
+
+   void      RFM69HW_setPayloadLength( uint8_t length ); // If fixed packet it's len, if variable it's max Rx
+   uint8_t   RFM69HW_getPayloadLength( void );
+
+   void      RFM69HW_setNodeAddress( uint8_t address );
+   uint8_t   RFM69HW_getNodeAddress( void );
+
+   void      RFM69HW_setBroadcastAddress( uint8_t address );
+   uint8_t   RFM69HW_getBroadcastAddress( void );
+
+   // TODO - Automodes & packetconfig2 (inter rx delay times etc)
+
+   // Tx start conditions
    //  MS 4 bits rev num, LS 4 bits metal rev num 
    uint8_t   RFM69HW_getVersion( void );
    uint8_t   RFM69HW_test( void );

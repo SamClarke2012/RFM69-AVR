@@ -249,10 +249,10 @@ Tx Mode:
    }
 
    // Criteria for packet acceptance in Listen mode:
-   #define LISTEN1_CRITEREA_RSSIONLY( listen_settings ) {\
+   #define LISTEN1_CRITERIA_RSSIONLY( listen_settings ) {\
       CBI( listen_settings, 3 );\
    }
-   #define LISTEN1_CRITEREA_RSSIANDSYNC( listen_settings ) {\
+   #define LISTEN1_CRITERIA_RSSIANDSYNC( listen_settings ) {\
       SBI( listen_settings, 3 );\
    }
    // Action taken after acceptance of a packet in Listen mode
